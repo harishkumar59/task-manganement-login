@@ -1,4 +1,29 @@
-import './style.css'
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ5-4M5GvNBnVZXv_jgvvtEN9kRgk8Wkg",
+  authDomain: "task-ba355.firebaseapp.com",
+  projectId: "task-ba355",
+  storageBucket: "task-ba355.firebasestorage.app",
+  messagingSenderId: "232013476051",
+  appId: "1:232013476051:web:fa63e009222bbb34ffa426",
+  measurementId: "G-Q8GW4B1C5G"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+
+
+
 
 // Get DOM elements
 const loginContainer = document.getElementById('loginContainer');
