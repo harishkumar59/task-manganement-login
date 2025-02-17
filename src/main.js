@@ -1,9 +1,13 @@
-
+console.log("JavaScript file loaded successfully!");
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-
+import { 
+    getAuth, 
+    signInWithPopup, 
+    GoogleAuthProvider,
+    signInWithEmailAndPassword 
+} from "firebase/auth";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -17,13 +21,17 @@ const firebaseConfig = {
   measurementId: "G-Q8GW4B1C5G"
 };
 
-// Initialize Firebase
+// Initialize Firebase 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
+// Configure Google Provider
+googleProvider.setCustomParameters({
+    prompt: 'select_account'
+});
 
-
-
+console.log(app);
 
 // Get DOM elements
 const loginContainer = document.getElementById('loginContainer');
@@ -33,10 +41,11 @@ const googleBtn = document.querySelector('.google-btn');
 
 // Check if user is logged in
 function checkLoginStatus() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (isLoggedIn) {
+    const user = auth.currentUser;
+    if (user) {
         loginContainer.style.display = 'none';
         logoutBtn.style.display = 'flex';
+        console.log('Logged in user:', user.email);
     } else {
         loginContainer.style.display = 'block';
         logoutBtn.style.display = 'none';
@@ -44,36 +53,57 @@ function checkLoginStatus() {
 }
 
 // Handle regular login
-loginForm.addEventListener('submit', (e) => {
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
-    // Here you would typically validate credentials with a backend
-    // For demo purposes, we'll just check if fields are not empty
-    if (email && password) {
-        localStorage.setItem('isLoggedIn', 'true');
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('Logged in successfully:', userCredential.user);
         checkLoginStatus();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Login failed: ' + error.message);
     }
 });
 
 // Handle Google login
-googleBtn.addEventListener('click', () => {
-    // Here you would implement Google OAuth
-    // For demo purposes, we'll just simulate a login
-    localStorage.setItem('isLoggedIn', 'true');
-    checkLoginStatus();
+googleBtn.addEventListener('click', async () => {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const user = result.user;
+        console.log('Google sign in successful:', user.email);
+        checkLoginStatus();
+    } catch (error) {
+        console.error('Error:', error);
+        const errorMessage = error.message;
+        const email = error.customData?.email || '';
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        alert('Google sign in failed: ' + errorMessage);
+    }
 });
 
 // Handle logout
-logoutBtn.addEventListener('click', () => {
-    localStorage.setItem('isLoggedIn', 'false');
-    checkLoginStatus();
-    // Clear form fields
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await auth.signOut();
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        console.log('Logged out successfully');
+        checkLoginStatus();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Logout failed: ' + error.message);
+    }
 });
 
-// Check login status when page loads
+// Listen for auth state changes
+auth.onAuthStateChanged((user) => {
+    checkLoginStatus();
+});
+
+// Initial check for login status
 checkLoginStatus();
 
